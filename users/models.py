@@ -16,7 +16,16 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(choices= ROLE_CHOICES, max_length=255)
 
-    
+class Restaurant(models.Model):
+    name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)
+    description = models.CharField(max_length=500)
+    phone_number= models.CharField(max_length=15)
+
+
+class Menu_Section(models.Model):
+    title = models.CharField(max_length=255)
+    restaurant = models.ForeignKey(Restaurant)
 
 class Food_Allergen(models.Model):
     allergy_name = models.CharField(max_length = 255)
