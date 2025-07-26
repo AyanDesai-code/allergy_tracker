@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Users</h1>
+  
+<ul>
+  {% for x in myusers %}
+    <li><a href="user_details/{{ x.id }}">{{ x.username }}</a></li>
+  {% endfor %}
+</ul>
+<p>Back to <a href="index/">Users</a></p>
+
+</body>
+</html>

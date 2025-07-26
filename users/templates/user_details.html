@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h1>{{ myuser.username }}</h1>
+  
+{% for allergy in myuser.allergies.all %}
+    <h2>{{allergy.allergyname}}</h2>
+    {% if allergy.test_level < 0.35 %}
+        <h2>Barely there / Can be consumed in moderate amounts</h2>
+    {% elif allergy.test_level < 0.70 %}
+        <h2>Not Severe / Can be consumed in small amounts</h2>
+    {% elif allergy.test_level < 3.50 %}
+        <h2>Moderate / Avoid</h2>
+    {% else %}
+        <h2>Severe/ Avoid at all costs </h2>
+    {% endif %}
+{% endfor %}
+
+
+<p>Role: {{ myuser.role }}</p>
+<p>Email: {{ myuser.email }}</p>
+
+<p>Back to <a href="/users">Users</a></p>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Allergies</h1>
+
+        <ul>
+            {% for x in myallergies %}
+                <li><a href="details/{{x.id}}">{{x.allergyname}}</a></li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
