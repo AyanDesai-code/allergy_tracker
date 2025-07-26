@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
     ]
     allergies= models.ManyToManyField(Allergy)
 
+    # Store user token after login that is currently stored in session
 
     role = models.CharField(choices= ROLE_CHOICES, max_length=255)
 
