@@ -14,27 +14,31 @@ class CustomUser(AbstractUser):
 
     # Store user token after login that is currently stored in session
 
-    role = models.CharField(choices= ROLE_CHOICES, max_length=255)
+    role = models.CharField(choices= ROLE_CHOICES, max_length=255 , null = True)
+
 
 class Restaurant(models.Model):
-    name = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
-    description = models.CharField(max_length=500)
-    phone_number= models.CharField(max_length=15)
-
+    name = models.CharField(max_length=255, null = True)
+    location = models.CharField(max_length=255, null = True)
+    description = models.CharField(max_length=500, null = True)
+    phone_number= models.CharField(max_length=15 , null = True)
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'restaurant'})
 
 class Menu_Section(models.Model):
-    title = models.CharField(max_length=255)
-    restaurant = models.ForeignKey(Restaurant)
+    title = models.CharField(max_length=255 , null = True)
+    restaurant = models.ForeignKey(Restaurant , on_delete=models.CASCADE)
+
+class Menu(models.Model):
+    sections = models.ManyToManyField(Menu_Section)
 
 class Food_Allergen(models.Model):
-    allergy_name = models.CharField(max_length = 255)
+    allergy_name = models.CharField(max_length = 255 , null = True)
 
 class Food(models.Model):
-    name =  models.CharField(max_length=255)
-    category = models.CharField(max_length=255)
+    name =  models.CharField(max_length=255 , null = True)
+    category = models.CharField(max_length=255 , null = True)
     allergies = models.ManyToManyField(Food_Allergen)
-
+    section=models.ForeignKey(Menu_Section, on_delete=models.CASCADE)
 
 # Todo list: 7/26 - 8/16
 # - complete allergy model
