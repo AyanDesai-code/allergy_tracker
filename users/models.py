@@ -78,9 +78,3 @@ class Food(models.Model):
 # - WK2: Define the structure of the relationship between restaurants and menu sections
 # - WK3: Define the structure of the relationship between menu sections and food
 # - (For each week you will need to make and test methods in the views.py files; the first week is the only week you will need to make new models
-
-
-
-    
-    
-    
