@@ -22,24 +22,45 @@ class Restaurant(models.Model):
     location = models.CharField(max_length=255, null = True)
     description = models.CharField(max_length=500, null = True)
     phone_number= models.CharField(max_length=15 , null = True)
-    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'restaurant'})
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'restaurant'}, null = True)
 
+    def __str__(self):
+        return self.name
 class Menu_Section(models.Model):
     title = models.CharField(max_length=255 , null = True)
-    restaurant = models.ForeignKey(Restaurant , on_delete=models.CASCADE)
-
+    restaurant = models.ForeignKey(Restaurant , on_delete=models.CASCADE, null = True)
+    def __str__(self):
+        return self.name
 class Menu(models.Model):
     sections = models.ManyToManyField(Menu_Section)
-
+    def __str__(self):
+        return self.name
 class Food_Allergen(models.Model):
-    allergy_name = models.CharField(max_length = 255 , null = True)
+    ALLERGY_CHOICES = [
+        ("milk", "Milk"),
+        ("eggs", "Eggs"),
+        ("shellfish", "Shellfish"),
+        ("treenuts", "Treenuts"),
+        ("peanuts", "Peanuts"),
+        ("wheat", "Wheat"),
+        ("soybeans", "Soybeans"),
+        ("sesame", "Sesame"),
+        ("fish", "Fish"),
+    
+    ]
 
+    allergen = models.CharField(choices=ALLERGY_CHOICES, max_length=255, null=True)
+
+    def __str__(self):
+        return self.name
+    
 class Food(models.Model):
     name =  models.CharField(max_length=255 , null = True)
     category = models.CharField(max_length=255 , null = True)
     allergies = models.ManyToManyField(Food_Allergen)
-    section=models.ForeignKey(Menu_Section, on_delete=models.CASCADE)
-
+    section=models.ForeignKey(Menu_Section, on_delete=models.CASCADE, null = True)
+    def __str__(self):
+        return self.name
 # Todo list: 7/26 - 8/16
 # - complete allergy model
 #      - more methods (urls/views) to manage allergies (editing/deleting) - only allergist - check session before doing operation
