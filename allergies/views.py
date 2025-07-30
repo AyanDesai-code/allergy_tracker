@@ -37,7 +37,7 @@ def allergies(request, user_id):
 
 def delete_allergy(request, id):
    allergy = get_object_or_404(Allergy, id=id)
-   
+   user = allergy.customuser_set.first()
    user.allergies.remove(allergy)
    return redirect('user_details', user_id=user.id)
 
