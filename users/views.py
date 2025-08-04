@@ -73,3 +73,95 @@ def index(request):
             "pretty": json.dumps(request.session.get("user"), indent=4),
         },
     )
+
+@csrf_exempt
+def menus(request, user_id):
+   user = get_object_or_404(CustomUser, id=user_id)
+   queryset = user.allergies.all()
+
+   # if request.method == 'POST':
+   #    data = request.POST
+   #    allergyname = data.get('allergyname')
+   #    test_level = data.get('test_level')
+   #    category = data.get('category')
+
+   #    new_allergy = Allergy.objects.create(
+   #    allergyname=allergyname,
+   #    test_level=test_level,
+   #    category=category,
+   #  )
+   #    user.allergies.add(new_allergy)
+
+   #    return redirect('user_details', user_id=user.id)
+   if request.method == 'POST':
+      try:
+         data = json.loads(request.body)
+         name = data.get('name')
+         restaurant = data.get('restaurant')
+         sections = data.get('sections')
+
+         new_menu = Menu.objects.create(
+            name=name,
+            restaurant=restaurant,
+            sections=sections,
+            )
+         user.menus.add(new_menu)
+
+         return JsonResponse({'status': 'created', 'Menu_id': new_menu.id}, status=201)
+
+      except json.JSONDecodeError:
+         return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+
+
+   if request.GET.get('search'):
+      queryset = queryset.filter(name__icontains=request.GET.get('search'))
+
+   context = {
+      'my_menus':queryset, 'myuser':user
+   }   
+   return render(request, 'user_details.html', context)
+
+def delete_menu(request, id):
+   menu = get_object_or_404(Menu, id=id)
+   user = menu.customuser_set.first()
+   user.menus.remove(menu)
+   return redirect('user_details', user_id=user.id)
+
+def update_menu(request, id):
+   menu = get_object_or_404(Menu, id=id)
+
+   user = menu.customuser_set.first()
+
+   if request.method == 'POST':
+      data = request.POST
+      name = data.get('name')
+      restaurant = data.get('restaurant')
+      sections = data.get('sections')
+
+      menu.name = name
+      menu.restaurant = restaurant
+      menu.sections = sections
+      menu.save()
+      context = {'menu': menu}
+      return redirect('user_details', user_id=user.id)
+
+   menus = user.menus.all()
+   return render(request, 'user_details.html', {'myuser': user, 'menus': menus, 'selected_menu': menu})
+
+
+def details(request, id):
+    menu = get_object_or_404(Menu, id=id)
+    
+    if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'id': menu.id,
+            'name': menu.name,
+            'restaurant': menu.restaurant,
+            'sections': menu.sections,
+        })
+
+    return render(request, 'user_details.html', {'mymenu': menu})
+def main(request):
+  template = loader.get_template('user_details.html')
+  return HttpResponse(template.render())

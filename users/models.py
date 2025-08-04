@@ -28,10 +28,12 @@ class Restaurant(models.Model):
         return self.name
 class Menu_Section(models.Model):
     title = models.CharField(max_length=255 , null = True)
-    restaurant = models.ForeignKey(Restaurant , on_delete=models.CASCADE, null = True)
+    Menu = models.ForeignKey(Restaurant , on_delete=models.CASCADE, null = True)
     def __str__(self):
         return self.name
 class Menu(models.Model):
+    restaurant = models.ForeignKey(Restaurant , on_delete=models.CASCADE, null = True)
+    name = models.CharField(max_length=255 , null = True)
     sections = models.ManyToManyField(Menu_Section)
     def __str__(self):
         return self.name
@@ -62,14 +64,14 @@ class Food(models.Model):
     def __str__(self):
         return self.name
 # Todo list: 7/26 - 8/16
-# - complete allergy model
+# - complete allergy model :)
 #      - more methods (urls/views) to manage allergies (editing/deleting) - only allergist - check session before doing operation
 #                                                                                          - the users model can also have built-in methods that the allergy methods call/use themselves
-# - complete users methods that will let them edit info on the edit page
-#       - Store patient information in users model that people put themselves
+# - complete users methods that will let them edit info on the edit page 
+#       - Store patient information in users model that people put themselves 
 # - Check out Postman application that is helpful when debugging methods
-# - Restuarants model/ create,update,fetch, delete
-# - Menu Section model, create, update, fetch, delete
+# - Restuarants model/ create,update,fetch, delete :)
+# - Menu Section model, create, update, fetch, delete 
 # - restaurant id/ many to many field
 
 
