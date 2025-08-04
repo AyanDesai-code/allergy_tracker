@@ -1,6 +1,6 @@
 from django.template import loader
-from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render, get_object_or_404
 from .models import CustomUser
 from django.conf import settings
 from django.urls import reverse
@@ -78,7 +78,11 @@ def index(request):
 @csrf_exempt
 def menus(request, user_id):
    user = get_object_or_404(CustomUser, id=user_id)
-   queryset = user.allergies.all()
+
+   restaurants = restaurants.objects.filter(owner=user)
+   menus = Menu.objects.filter(restaurants__in=restaurants).distinct()
+
+   queryset = restaurant.menus.all()
 
    # if request.method == 'POST':
    #    data = request.POST
@@ -104,12 +108,9 @@ def menus(request, user_id):
             section_ids = data.get('sections', [])
 
             restaurant = Restaurant.objects.get(id=restaurant_id)
-            new_menu = Menu.objects.create(
-                name=name,
-                restaurant=restaurant,
-            )
+            new_menu = Menu.objects.create(name=name)
             new_menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
-            user.menus.add(new_menu)
+            restaurant.menus.add(new_menu)
 
             return JsonResponse({'status': 'created', 'Menu_id': new_menu.id}, status=201)
         except json.JSONDecodeError:
@@ -117,39 +118,49 @@ def menus(request, user_id):
 
 
    if request.GET.get('search'):
-      queryset = queryset.filter(name__icontains=request.GET.get('search'))
+        menus = menus.filter(name__icontains=request.GET.get('search'))
 
    context = {
-      'my_menus':queryset, 'myuser':user
-   }   
+        'menus': menus,
+        'myuser': user
+    }
+   
    return render(request, 'user_details.html', context)
 
 def delete_menu(request, id):
    menu = get_object_or_404(Menu, id=id)
-   user = menu.customuser_set.first()
-   user.menus.remove(menu)
-   return redirect('user_details', user_id=user.id)
+
+   restaurant = menu.restaurants.first()
+   if restaurant:
+        restaurant.menus.remove(menu)
+
+   return redirect('user_details.html', user_id=restaurant.owner.id if restaurant else None)
 
 def update_menu(request, id):
     menu = get_object_or_404(Menu, id=id)
-    user = menu.customuser_set.first()
+    restaurant = menu.restaurants.first()
+    user = restaurant.owner if restaurant else None
 
     if request.method == 'POST':
         name = request.POST.get('name')
         restaurant_id = request.POST.get('restaurant')
-        section_ids = request.POST.getlist('sections')  # Use getlist for multiple values
+        section_ids = request.POST.getlist('sections')
 
         menu.name = name
-        menu.restaurant = Restaurant.objects.get(id=restaurant_id)
-        menu.save()
         menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
+        # Move menu to new restaurant
+        for r in menu.restaurants.all():
+            r.menus.remove(menu)
+        new_restaurant = Restaurant.objects.get(id=restaurant_id)
+        new_restaurant.menus.add(menu)
+
         return redirect('user_details', user_id=user.id)
 
-    menus = user.menus.all()
+    menus = restaurant.menus.all() if restaurant else Menu.objects.none()
     return render(request, 'user_details.html', {'myuser': user, 'menus': menus, 'selected_menu': menu})
 
 
-def details(request, id):
+def menu_details(request, id):
     menu = get_object_or_404(Menu, id=id)
     if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
         return JsonResponse({

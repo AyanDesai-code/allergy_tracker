@@ -23,7 +23,7 @@ class Restaurant(models.Model):
     description = models.CharField(max_length=500, null = True)
     phone_number= models.CharField(max_length=15 , null = True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'restaurant'}, null = True)
-
+    menus = models.ManyToManyField('Menu', related_name='restaurants', blank=True)
     def __str__(self):
         return self.name
 class Menu_Section(models.Model):
@@ -32,7 +32,6 @@ class Menu_Section(models.Model):
     def __str__(self):
         return self.name
 class Menu(models.Model):
-    restaurant = models.ForeignKey(Restaurant , on_delete=models.CASCADE, null = True)
     name = models.CharField(max_length=255 , null = True)
     sections = models.ManyToManyField(Menu_Section)
     def __str__(self):
