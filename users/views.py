@@ -8,6 +8,7 @@ from urllib.parse import quote_plus, urlencode
 import json
 from authlib.integrations.django_client import OAuth
 
+from .models import Menu, Restaurant, Menu_Section
 
 # Create your views here.
 def users(request):
@@ -93,25 +94,26 @@ def menus(request, user_id):
    #    user.allergies.add(new_allergy)
 
    #    return redirect('user_details', user_id=user.id)
+
+
    if request.method == 'POST':
-      try:
-         data = json.loads(request.body)
-         name = data.get('name')
-         restaurant = data.get('restaurant')
-         sections = data.get('sections')
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            restaurant_id = data.get('restaurant')
+            section_ids = data.get('sections', [])
 
-         new_menu = Menu.objects.create(
-            name=name,
-            restaurant=restaurant,
-            sections=sections,
+            restaurant = Restaurant.objects.get(id=restaurant_id)
+            new_menu = Menu.objects.create(
+                name=name,
+                restaurant=restaurant,
             )
-         user.menus.add(new_menu)
+            new_menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
+            user.menus.add(new_menu)
 
-         return JsonResponse({'status': 'created', 'Menu_id': new_menu.id}, status=201)
-
-      except json.JSONDecodeError:
-         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
+            return JsonResponse({'status': 'created', 'Menu_id': new_menu.id}, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
 
    if request.GET.get('search'):
@@ -129,39 +131,35 @@ def delete_menu(request, id):
    return redirect('user_details', user_id=user.id)
 
 def update_menu(request, id):
-   menu = get_object_or_404(Menu, id=id)
+    menu = get_object_or_404(Menu, id=id)
+    user = menu.customuser_set.first()
 
-   user = menu.customuser_set.first()
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        restaurant_id = request.POST.get('restaurant')
+        section_ids = request.POST.getlist('sections')  # Use getlist for multiple values
 
-   if request.method == 'POST':
-      data = request.POST
-      name = data.get('name')
-      restaurant = data.get('restaurant')
-      sections = data.get('sections')
+        menu.name = name
+        menu.restaurant = Restaurant.objects.get(id=restaurant_id)
+        menu.save()
+        menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
+        return redirect('user_details', user_id=user.id)
 
-      menu.name = name
-      menu.restaurant = restaurant
-      menu.sections = sections
-      menu.save()
-      context = {'menu': menu}
-      return redirect('user_details', user_id=user.id)
-
-   menus = user.menus.all()
-   return render(request, 'user_details.html', {'myuser': user, 'menus': menus, 'selected_menu': menu})
+    menus = user.menus.all()
+    return render(request, 'user_details.html', {'myuser': user, 'menus': menus, 'selected_menu': menu})
 
 
 def details(request, id):
     menu = get_object_or_404(Menu, id=id)
-    
     if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
         return JsonResponse({
             'id': menu.id,
             'name': menu.name,
-            'restaurant': menu.restaurant,
-            'sections': menu.sections,
+            'restaurant': menu.restaurant.id if menu.restaurant else None,
+            'sections': list(menu.sections.values_list('id', flat=True)),
         })
-
     return render(request, 'user_details.html', {'mymenu': menu})
+
 def main(request):
   template = loader.get_template('user_details.html')
   return HttpResponse(template.render())
