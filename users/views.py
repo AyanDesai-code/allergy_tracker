@@ -7,6 +7,8 @@ from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 import json
 from authlib.integrations.django_client import OAuth
+from django.views.decorators.csrf import csrf_exempt
+
 
 from .models import Menu, Restaurant, Menu_Section
 
@@ -79,10 +81,9 @@ def index(request):
 def menus(request, user_id):
    user = get_object_or_404(CustomUser, id=user_id)
 
-   restaurants = restaurants.objects.filter(owner=user)
+   restaurants = Restaurant.objects.filter(owner=user)
    menus = Menu.objects.filter(restaurants__in=restaurants).distinct()
 
-   queryset = restaurant.menus.all()
 
    # if request.method == 'POST':
    #    data = request.POST
@@ -112,9 +113,11 @@ def menus(request, user_id):
             new_menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
             restaurant.menus.add(new_menu)
 
-            return JsonResponse({'status': 'created', 'Menu_id': new_menu.id}, status=201)
+            return JsonResponse({'status': 'created', 'menu_id': new_menu.id}, status=201)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
 
 
    if request.GET.get('search'):
@@ -134,7 +137,8 @@ def delete_menu(request, id):
    if restaurant:
         restaurant.menus.remove(menu)
 
-   return redirect('user_details.html', user_id=restaurant.owner.id if restaurant else None)
+   return redirect('details', id=restaurant.owner.id if restaurant else None)
+
 
 def update_menu(request, id):
     menu = get_object_or_404(Menu, id=id)
@@ -172,5 +176,4 @@ def menu_details(request, id):
     return render(request, 'user_details.html', {'mymenu': menu})
 
 def main(request):
-  template = loader.get_template('user_details.html')
-  return HttpResponse(template.render())
+  return render(request, 'user_details.html', {'myuser': request.user})
