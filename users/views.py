@@ -82,7 +82,8 @@ def menus(request, user_id):
    user = get_object_or_404(CustomUser, id=user_id)
 
    restaurants = Restaurant.objects.filter(owner=user)
-   menus = Menu.objects.filter(restaurants__in=restaurants).distinct()
+   menus = Menu.objects.filter(restaurant__in=restaurants).distinct()
+
 
 
    # if request.method == 'POST':
@@ -133,16 +134,21 @@ def menus(request, user_id):
 def delete_menu(request, id):
    menu = get_object_or_404(Menu, id=id)
 
-   restaurant = menu.restaurants.first()
+   restaurant = menu.restaurant
    if restaurant:
-        restaurant.menus.remove(menu)
+        menu.restaurant = None
+        menu.save()
+
 
    return redirect('details', id=restaurant.owner.id if restaurant else None)
 
 
 def update_menu(request, id):
     menu = get_object_or_404(Menu, id=id)
-    restaurant = menu.restaurants.first()
+    restaurant = menu.restaurant
+
+
+    
     user = restaurant.owner if restaurant else None
 
     if request.method == 'POST':
@@ -154,9 +160,10 @@ def update_menu(request, id):
         menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
         # Move menu to new restaurant
         for r in menu.restaurants.all():
-            r.menus.remove(menu)
-        new_restaurant = Restaurant.objects.get(id=restaurant_id)
-        new_restaurant.menus.add(menu)
+            new_restaurant = Restaurant.objects.get(id=restaurant_id)
+        menu.restaurant = new_restaurant
+        menu.save()
+
 
         return redirect('user_details', user_id=user.id)
 
