@@ -16,7 +16,6 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(choices= ROLE_CHOICES, max_length=255 , null = True)
 
-
 class Restaurant(models.Model):
     name = models.CharField(max_length=255, null = True)
     location = models.CharField(max_length=255, null = True)
@@ -28,7 +27,6 @@ class Restaurant(models.Model):
         return self.name
 class Menu_Section(models.Model):
     title = models.CharField(max_length=255 , null = True)
-    Menu = models.ForeignKey(Restaurant , on_delete=models.CASCADE, null = True)
     def __str__(self):
         return self.title
 class Menu(models.Model):
@@ -53,7 +51,7 @@ class Food_Allergen(models.Model):
     allergen = models.CharField(choices=ALLERGY_CHOICES, max_length=255, null=True)
 
     def __str__(self):
-        return self.name
+        return self.allergen
     
 class Food(models.Model):
     name =  models.CharField(max_length=255 , null = True)
