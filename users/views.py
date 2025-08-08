@@ -112,7 +112,9 @@ def menus(request, user_id):
             restaurant = Restaurant.objects.get(id=restaurant_id)
             new_menu = Menu.objects.create(name=name)
             new_menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
-            restaurant.menus.add(new_menu)
+            new_menu.restaurant = restaurant
+            new_menu.save()
+
 
             return JsonResponse({'status': 'created', 'menu_id': new_menu.id}, status=201)
         except json.JSONDecodeError:
@@ -159,8 +161,8 @@ def update_menu(request, id):
         menu.name = name
         menu.sections.set(Menu_Section.objects.filter(id__in=section_ids))
         # Move menu to new restaurant
-        for r in menu.restaurants.all():
-            new_restaurant = Restaurant.objects.get(id=restaurant_id)
+        
+        new_restaurant = Restaurant.objects.get(id=restaurant_id)
         menu.restaurant = new_restaurant
         menu.save()
 
