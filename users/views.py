@@ -251,25 +251,24 @@ def delete_menu_section(request, id):
    menu_section = get_object_or_404(Menu_Section, id=id)
    menus = Menu.objects.filter(sections=menu_section)
    
-   # If the section is associated with a menu, remove it from the menu
+   owner = None
+   if menus.exists():
+       owner = menus.first().restaurant.owner
+
    for menu in menus:
        menu.sections.remove(menu_section)
    menu_section.delete()
  
-   if menus.exists():
-       owner = menus.first().restaurant.owner
-       return redirect('user_details', id = owner.id)
-   else:
-       return redirect('users')
-
-   return redirect('details', id=menu.owner.id if menu else None)
-
+   if owner:
+         return redirect('user_details', user_id=owner.id)
+   return redirect('users')
+    
 
 def update_menu_section(request, id):
     menu_section = get_object_or_404(Menu_Section, id=id)
-    menu = getattr(menu_section, 'menu', None)
-    restaurant = getattr(menu, 'restaurant', None) if menu else None
-    user = getattr(restaurant, 'owner', None) if restaurant else None
+    menu = menu_section.menu_set.first()
+    restaurant = menu.restaurant if menu else None
+    user = restaurant.owner if restaurant else None
 
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -280,10 +279,11 @@ def update_menu_section(request, id):
 
         if menu_id:
             new_menu = get_object_or_404(Menu, id=menu_id)
-            menu_section.menu = new_menu
+            menu_section.menu_set.clear()
+            menu_section.menu_set.add(new_menu)
 
         menu_section.save()
-        return redirect('user_details', user_id=user.id)
+        return redirect('user_details', user_id=user.id if user else None)
 
     menus = restaurant.menus.all() if restaurant else Menu.objects.none()
     return render(request, 'user_details.html',{
@@ -295,16 +295,19 @@ def update_menu_section(request, id):
     
 
 
-def menu_details(request, id):
-    menu = get_object_or_404(Menu, id=id)
+def menu_section_details(request, id):
+    menu_section = get_object_or_404(Menu_Section, id=id)
+    menus = menu_section.menu_set_all()
+    restaurant = menus.first().restaurant if menus.exists() else None
+
     if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
         return JsonResponse({
-            'id': menu.id,
-            'name': menu.name,
-            'restaurant': menu.restaurant.id if menu.restaurant else None,
-            'sections': list(menu.sections.values_list('id', flat=True)),
+            'id': menu_section.id,
+            'title': menu_section.title,
+            'restaurant': menu_section.restaurant.id if menu_section.restaurant else None,
+            'sections': list(menu_section.sections.values_list('id', flat=True)),
         })
-    return render(request, 'user_details.html', {'mymenu': menu})
+    return render(request, 'user_details.html', {'menu_section': menu_section})
 
 def main(request):
   return render(request, 'user_details.html', {'myuser': request.user})
