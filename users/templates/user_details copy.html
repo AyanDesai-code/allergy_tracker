@@ -151,16 +151,7 @@
                                     {% if food.allergens %}
                                         - Allergens:
                                         {% for al in food.allergens %}
-                                            {% with label=al.label|default:al %}
-                                                {{ label }}
-                                                {# If the current user has a matching Allergy, show its severity badge #}
-                                                {% for user_allergy in allergies %}
-                                                    {% if user_allergy.allergyname|lower == label|lower %}
-                                                        <span class="badge {{ user_allergy.severity_badge_class }} ms-2">{{ user_allergy.severity }}</span>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                {% if not forloop.last %}, {% endif %}
-                                            {% endwith %}
+                                            {% if al.label %}{{ al.label }}{% else %}{{ al }}{% endif %}{% if not forloop.last %}, {% endif %}
                                         {% endfor %}
                                     {% endif %}
                                 </li>
