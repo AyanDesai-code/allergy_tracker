@@ -36,24 +36,13 @@ class Menu(models.Model):
         return self.name
     
 class Food_Allergen(models.Model):
-    ALLERGY_CHOICES = [
-        ("milk", "Milk"),
-        ("eggs", "Eggs"),
-        ("shellfish", "Shellfish"),
-        ("treenuts", "Treenuts"),
-        ("peanuts", "Peanuts"),
-        ("wheat", "Wheat"),
-        ("soybeans", "Soybeans"),
-        ("sesame", "Sesame"),
-        ("fish", "Fish"),
-        ("Nuts", "nuts")
-    
-    ]
-
-    allergen = models.CharField(choices=ALLERGY_CHOICES, max_length=255, null=True)
+    # Use a free-text field for allergens so restaurants can add any value.
+    # Removing the previous fixed choice list makes it simpler to store
+    # incoming values like 'Fish' or 'fish' without mismatch.
+    allergen = models.CharField(max_length=255, null=True)
 
     def __str__(self):
-        return self.allergen
+        return self.allergen or ""
     
 class Food(models.Model):
     name =  models.CharField(max_length=255 , null = True)

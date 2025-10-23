@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
+<!-- normal heading stuff -->
+    
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -10,24 +12,26 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 
-    <!-- Custom CSS -->
+    <!-- CSS stylesheet I never made -->
     <link rel="stylesheet" href="{% static 'main.css' %}">
 </head>
 <body>
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
+        <!--logo-->
         <a class="navbar-brand" href="#"><img src="{% static 'images/logo.png' %}" width="60" height="60" alt="logo"></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
         </button>
+        <!--create allergy/restaurant buttons-->
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <button type="button" class="btn btn-primary me-3" data-bs-toggle="modal" data-bs-target="#createAllergyModal">Create Allergy</button>
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#restaurantModal">Create Restaurant</button>
             </ul>
-
+            <!--restaurant search bar-->
             <form class="d-flex mx-auto position-relative" id="restaurantSearchForm" onsubmit="return false;">
                 <input 
                     class="form-control me-2" 
@@ -41,7 +45,7 @@
                 </form>
 
 
-
+<!--Oh Boy! login and logout buttons... I certainly hope implementing auth0 will be easy! Right? :3 - Ayan Desai August 2025-->
             <div class="d-flex ms-auto">
                 {% if myuser2 and myuser2.is_authenticated %}
                     <span class="me-3">Hello, {{ myuser2.username }}</span>
@@ -54,24 +58,23 @@
         </div>
     </div>
 </nav>
-
+<!-- End Navbar -->
 <!-- Allergies Section -->
 <div class="container mt-4">
     <h3>My Allergies</h3>
     <hr>
-    {% if myuser.exists %}
-        <div class="alert alert-warning text-center mb-0">You have food allergies! Be cautious when dining out.</div>
-    {% else %}
-        <div class="alert alert-success text-center mb-0">No known food allergies. Enjoy your meals!</div>
-    {% endif %}
     <div id="allergy-cards" class="row">
+        <!-- Server-rendered allergy cards -->
         {% for allergy in allergies %}
             <div class="card mb-3 col-12" id="allergy-card-{{ allergy.id }}">
                 <div class="card-body">
+                    <!--Allergy name-->
                     <h5 class="card-title">{{ allergy.allergyname }}</h5>
                     <p class="card-text">
+                        <!--Allergy test value and severity-->
                         Test Value: {{ allergy.test_level }}
                         <span class="badge {{ allergy.severity_badge_class }}">{{ allergy.severity }}</span>
+                        <!--delete allergy button-->
                         <button class="btn btn-sm btn-danger delete-allergy-btn" data-id="{{ allergy.id }}">&times;</button>
                     </p>
                 </div>
@@ -146,7 +149,10 @@
                                 <li>
                                     {{ food.name }}
                                     {% if food.allergens %}
-                                        - Allergens: {{ food.allergens|join:", " }}
+                                        - Allergens:
+                                        {% for al in food.allergens %}
+                                            {% if al.label %}{{ al.label }}{% else %}{{ al }}{% endif %}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
                                     {% endif %}
                                 </li>
                             {% empty %}

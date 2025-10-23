@@ -1,3 +1,4 @@
+#I dont need half of these imports, but im too scared to delete them :(
 from django.template import loader
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
@@ -24,6 +25,7 @@ from .models import CustomUser, Restaurant, Menu, Menu_Section, Food, Food_Aller
 #Users
 #---------------
 oauth = OAuth()
+#registers things with auth0
 auth0 = oauth.register(
     'auth0',
     client_id=settings.AUTH0_CLIENT_ID,
@@ -55,7 +57,7 @@ def details(request, id):
     return HttpResponse(template.render(context,request))
 
 
-
+#view to login (DONT TOUCH)
 def login(request):
     print("Hola!")
     return auth0.authorize_redirect(request, settings.AUTH0_CALLBACK_URL)
@@ -424,6 +426,7 @@ def food_allergens(request, food_allergen_id):
         try:
             new_allergy = Allergy.objects.create(allergen=allergen_name)
             food_allergen.allergies.add(new_allergy)
+            print(f"Added Allergy {new_allergy.allergen} to Food_Allergen {food_allergen.allergen}")
 
             return JsonResponse({'status': 'created', 'food_allergen_id': new_allergy.id}, status=201)
         except Exception as e:
@@ -463,12 +466,14 @@ def update_food_allergen(request, id):
     if request.method == 'POST':
         new_allergen = request.POST.get('allergen')
 
-        if new_allergen in dict(Food_Allergen.ALLERGY_CHOICES):
-            food_allergen.allergen = new_allergen
-            food_allergen.save()
-            return redirect("food_allergens")
-        else:
-            return HttpResponse("Invalid allergen choice.", status=400)
+        # Accept any non-empty free-text allergen value now that `Food_Allergen`
+        # stores plain text instead of choice keys.
+        if not new_allergen:
+            return HttpResponse("Allergen value is required.", status=400)
+
+        food_allergen.allergen = new_allergen
+        food_allergen.save()
+        return redirect("food_allergens")
         
     return redirect('user_details', {"food_allergen": food_allergen})
 
@@ -790,15 +795,17 @@ def main(request):
             for s in m.sections.all():
                 foods = []
                 for f in s.food_set.all():
-                    allergies = list(f.allergies.all())
+                    allergens = list(f.allergies.all())
                     food_dict = {
                         'id': f.id,
                         'name': f.name,
-                        'allergies': [
+                        # `Food_Allergen.allergen` is plain text now, use it
+                        # for both value and label.
+                        'allergens': [
                             {
                                 'value': a.allergen,
-                                'label': dict(Food_Allergen.ALLERGY_CHOICES).get(a.allergen, a.allergen)
-                            } for a in allergies
+                                'label': a.allergen
+                            } for a in allergens 
                         ],
                     }
                     foods.append(food_dict)
