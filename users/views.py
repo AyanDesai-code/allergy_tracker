@@ -110,7 +110,7 @@ def logout(request):
         + urlencode(
             {
                 "returnTo": settings.AUTH0_HOME_URL,
-                # "client_id": settings.AUTH0_CLIENT_ID,
+                "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
         ),
